@@ -1,0 +1,55 @@
+# Bamipet RFM — full production stack.
+#   cp .env.example .env   # then edit SECRET_KEY, admin bootstrap, Navatel creds
+#   docker compose up -d --build
+#   docker compose exec api alembic upgrade head
+#   docker compose exec api python -m scripts.create_admin
+#   docker compose exec api python -m scripts.seed_demo   # optional demo data (mock mode only)
+# Dashboard: http://localhost:8080 — API docs: http://localhost:8080/api/docs
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bamipet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-bamipet_rfm}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bamipet} -d ${POSTGRES_DB:-bamipet_rfm}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-bamipet}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bamipet_rfm}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    command: python -m sync.worker
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-bamipet}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bamipet_rfm}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
