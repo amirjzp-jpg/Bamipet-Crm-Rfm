@@ -1,0 +1,60 @@
+# Triggers the nightly Navatel sync via the API, for deployments that don't
+# run the always-on `worker` container (e.g. the free-tier Vercel + Render
+# split — see deploy/README-deploy.md). If you DO run backend/sync/worker.py
+# as a persistent process (docker-compose, a paid host), disable this
+# workflow instead — you'd otherwise get two syncs.
+#
+# Required repo secrets (Settings > Secrets and variables > Actions):
+#   BAMIPET_API_URL       e.g. https://bamipet-rfm-api.onrender.com
+#   BAMIPET_ADMIN_USERNAME
+#   BAMIPET_ADMIN_PASSWORD
+
+name: Nightly Bamipet RFM sync
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 02:30 Asia/Tehran (UTC+3:30) ≈ 23:00 UTC
+  workflow_dispatch: {}    # allows manual "Run workflow" from the Actions tab
+
+jobs:
+  trigger-sync:
+    runs-on: ubuntu-latest
+    steps:
+      # A spin-down free host can kill the sync's detached background thread
+      # the moment this job's HTTP request completes, so this step keeps
+      # polling (keeping the instance awake) until the run actually finishes
+      # instead of trusting the 202 response alone.
+      - name: Trigger sync and wait for completion
+        run: |
+          set -euo pipefail
+
+          login() {
+            curl -sf -X POST "$BAMIPET_API_URL/api/v1/auth/login" \
+              -H 'Content-Type: application/json' \
+              -d "{\"username\": \"$BAMIPET_ADMIN_USERNAME\", \"password\": \"$BAMIPET_ADMIN_PASSWORD\"}" \
+              | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
+          }
+
+          TOKEN=$(login)
+          STATUS=$(curl -sf -o /dev/null -w '%{http_code}' -X POST \
+            "$BAMIPET_API_URL/api/v1/sync-runs/trigger" \
+            -H "Authorization: Bearer $TOKEN")
+          echo "Trigger responded with HTTP $STATUS"
+          test "$STATUS" = "202"
+
+          for i in $(seq 1 30); do
+            sleep 10
+            RUN=$(curl -sf "$BAMIPET_API_URL/api/v1/sync-runs?limit=1" -H "Authorization: Bearer $TOKEN")
+            RUN_STATUS=$(echo "$RUN" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['status'])")
+            echo "Poll $i: sync status = $RUN_STATUS"
+            if [ "$RUN_STATUS" != "running" ]; then
+              test "$RUN_STATUS" = "success"
+              exit 0
+            fi
+          done
+          echo "::error::Sync did not finish within 5 minutes of polling"
+          exit 1
+        env:
+          BAMIPET_API_URL: ${{ secrets.BAMIPET_API_URL }}
+          BAMIPET_ADMIN_USERNAME: ${{ secrets.BAMIPET_ADMIN_USERNAME }}
+          BAMIPET_ADMIN_PASSWORD: ${{ secrets.BAMIPET_ADMIN_PASSWORD }}

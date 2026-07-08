@@ -1,0 +1,36 @@
+# Render Blueprint — deploys the FastAPI backend only (Docker-based).
+# Render's free tier doesn't include an always-on background worker, so the
+# nightly sync runs instead via .github/workflows/nightly-sync.yml, which
+# calls this service's /sync-runs/trigger endpoint on a schedule — see
+# deploy/README-deploy.md.
+#
+# Database: NOT defined here (Render's free Postgres expires after 90 days).
+# Use Neon or Supabase instead and paste the connection string as
+# DATABASE_URL below after the first deploy (Render dashboard → Environment).
+#
+# Deploy: push this repo to GitHub, then in Render: New > Blueprint > pick
+# this repo. Render reads this file automatically.
+
+services:
+  - type: web
+    name: bamipet-rfm-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # paste your Neon/Supabase connection string manually
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false   # your Vercel URL(s), comma-separated, e.g. https://your-app.vercel.app
+      - key: NAVATEL_MODE
+        value: mock
+      - key: ENABLE_WRITEBACK
+        value: "false"

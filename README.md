@@ -32,6 +32,10 @@ Built from [`bamipet-rfm-system-spec.md`](./bamipet-rfm-system-spec.md)
 | Dashboard | `frontend/` | Farsi-first RTL with full English/LTR mirror, Jalali/Gregorian dual calendar, Persian-numeral toggle, Vazirmatn+Inter (self-hosted), brand tokens throughout |
 | Tests | `backend/tests/` | scoring direction & tie-fairness, persona rules, sync idempotency, full API contract (18 tests) |
 
+> **Want a free-tier hosted URL instead of Docker on your own host?** See
+> [`deploy/README-deploy.md`](./deploy/README-deploy.md) — a concrete
+> Vercel (frontend) + Render (backend) + Neon (database) walkthrough, $0/month.
+
 ## Quick start (Docker — recommended)
 
 ```bash

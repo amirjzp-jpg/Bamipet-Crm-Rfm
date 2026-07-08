@@ -2,7 +2,11 @@
  * on 401. Tokens in localStorage — acceptable for an internal tool behind
  * team logins; the API enforces all real authorization server-side. */
 
-const BASE = '/api/v1'
+// Same-origin relative path by default (nginx/Vite proxy /api to the
+// backend — see docker-compose.yml, vite.config.ts). Set VITE_API_BASE_URL
+// at build time for a split deployment (e.g. frontend on Vercel, backend on
+// Render/Railway on a different domain) — see deploy/README-deploy.md.
+const BASE = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/v1`
 
 export interface TokenPair {
   access_token: string
