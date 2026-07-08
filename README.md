@@ -6,6 +6,13 @@ CRM/telephony/SMS platform, not just an order database. Also produces a
 best-guess mapping from each segment to a Bamipet persona (نگار/سارا/کیان/امیر)
 and the messaging pillar to lead with, per `bamipet-messaging-architecture.md`.
 
+> **Building this into a full product?** Start with
+> [`bamipet-rfm-build-plan.md`](./bamipet-rfm-build-plan.md) — the concrete,
+> execution-ready engineering plan (tech stack, data model, API contract,
+> page-by-page UI spec, phased build order, and the current gap list against
+> this repo). `bamipet-rfm-system-spec.md` remains the architecture/UX
+> source of truth; the build plan operationalizes it.
+
 ## What's here
 
 | File | Purpose |
