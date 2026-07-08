@@ -1,0 +1,14 @@
+# env / secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+backend/.venv/
+backend/test_bamipet.db
+.pytest_cache/
+
+# node
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo

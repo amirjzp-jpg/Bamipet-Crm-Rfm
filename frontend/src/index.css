@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Self-hosted brand typefaces (bamipet-visual-guidelines.md):
+   Vazirmatn = all Farsi UI; Inter = Latin labels + every numeral/date/ID. */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('./assets/fonts/Vazirmatn-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/InterVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light; /* the brand is warm-light; no dark admin-panel look */
+}
+
+body {
+  @apply bg-cream text-ink font-fa antialiased;
+  line-height: 1.9; /* generous, per "calm ≠ cramped" */
+}
+
+/* numerals, dates, IDs always Inter with tabular figures so tables align */
+.num {
+  font-family: 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+
+.en {
+  font-family: 'Inter', sans-serif;
+  unicode-bidi: isolate;
+}
+
+/* uppercase Inter micro-label, from the brand docs' .lbl */
+.lbl {
+  font-family: 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* recharts text inherits the UI font */
+.recharts-text { font-family: 'Inter', sans-serif; font-size: 11px; }
